@@ -3,7 +3,7 @@ name: Sync Shopify Theme Updates
 on:
   push:
     branches:
-      - main
+      - shopify-live
 
 jobs:
   debug:

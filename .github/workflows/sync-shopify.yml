@@ -30,7 +30,7 @@ jobs:
       - name: Merge into develop
         run: |
           git checkout develop
-          git merge main --no-edit
+          git merge shopify-live --no-edit
           git push origin develop
 
       - name: Merge into main

@@ -2,6 +2,8 @@ name: Commit Message Lint (Jira)
 
 on:
   pull_request:
+    branches:
+        - develop
     types: [opened, edited, synchronize, reopened]
 
 jobs:

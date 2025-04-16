@@ -32,9 +32,3 @@ jobs:
           git checkout develop
           git merge main --no-edit
           git push origin develop
-
-      - name: Merge into staging
-        run: |
-          git checkout staging
-          git merge main --no-edit
-          git push origin staging

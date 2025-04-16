@@ -32,9 +32,13 @@ jobs:
           git checkout develop
           git merge shopify-live --no-edit
           git push origin develop
-
+          
       - name: Merge into main
-        run: |
-          git checkout main
-          git merge shopify-live --no-edit
-          git push origin main
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Sync from shopify-live"
+          title: "Merge updates from Shopify live"
+          body: "Changes from shopify-live"
+          base: main
+          branch: shopify-live

@@ -27,15 +27,8 @@ jobs:
           git config user.name "Shopify Sync Bot"
           git config user.email "sync-bot@example.com"
 
-      - name: Merge into develop (force theirs)
+      - name: Merge into develop
         run: |
           git checkout develop
-          git merge -X theirs main --no-edit || true
-          git commit -am "Résolution automatique des conflits via -X theirs" || true
-          git push origin develop
-
-      - name: Merge into staging
-        run: |
-          git checkout staging
           git merge main --no-edit
-          git push origin staging
+          git push origin develop

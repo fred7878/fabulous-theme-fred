@@ -16,10 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.head_commit.message, 'Shopify')
     steps:
-      - name: Checkout main
+      - name: Checkout shopify-live
         uses: actions/checkout@v3
         with:
-          ref: main
+          ref: shopify-live
           fetch-depth: 0
 
       - name: Setup Git user
@@ -30,7 +30,7 @@ jobs:
       - name: Merge into develop
         run: |
           git checkout develop
-          git merge main --no-edit
+          git merge shopify-live --no-edit
           git push origin develop
 
       - name: Merge into main

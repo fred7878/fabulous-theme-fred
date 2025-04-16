@@ -1,0 +1,35 @@
+name: Sync Shopify Theme Updates
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync-branches:
+    if: "contains(github.event.head_commit.message, 'Update from Shopify')" # Déclenche que si c'est Shopify qui a pushé
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          fetch-depth: 0 # important pour voir toutes les branches
+
+      - name: Setup Git user
+        run: |
+          git config user.name "Shopify Sync Bot"
+          git config user.email "sync-bot@example.com"
+
+      - name: Merge into develop
+        run: |
+          git checkout develop
+          git merge main --no-edit
+          git push origin develop
+
+      - name: Merge into staging
+        run: |
+          git checkout staging
+          git merge main --no-edit
+          git push origin staging

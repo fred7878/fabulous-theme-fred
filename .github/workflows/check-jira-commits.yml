@@ -1,0 +1,50 @@
+name: Validate Jira Ticket in Commits & Branch
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-jira:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get PR branch name
+        id: get_branch
+        run: echo "branch_name=${{ github.head_ref }}" >> $GITHUB_OUTPUT
+
+      - name: Extract Jira ID from branch name
+        id: extract_jira
+        run: |
+          BRANCH_NAME="${{ steps.get_branch.outputs.branch_name }}"
+          echo "Branch name: $BRANCH_NAME"
+          
+          # Regexp pour extraire PROJ-123
+          if [[ "$BRANCH_NAME" =~ (PROJ-[0-9]+) ]]; then
+            echo "jira_id=${BASH_REMATCH[1]}" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Aucun ID Jira trouvé dans le nom de branche."
+            exit 1
+          fi
+
+      - name: Check commits contain Jira ID
+        run: |
+          JIRA_ID=${{ steps.extract_jira.outputs.jira_id }}
+          echo "Vérification que chaque commit contient : $JIRA_ID"
+
+          git log origin/${{ github.base_ref }}..HEAD --pretty=format:%s > commit-messages.txt
+
+          echo "Liste des commits :"
+          cat commit-messages.txt
+
+          if grep -v "$JIRA_ID" commit-messages.txt; then
+            echo "❌ Un ou plusieurs commits ne contiennent pas l'ID Jira requis ($JIRA_ID)."
+            exit 1
+          fi
+
+          echo "✅ Tous les commits contiennent l'ID Jira."

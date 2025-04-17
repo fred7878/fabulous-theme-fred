@@ -34,12 +34,28 @@ jobs:
           git push origin develop
 
 
-      - name: Merge into main
+      - name: Create merge branch from shopify-live
+        run: |
+          git checkout -b merge-shopify-live
+          git fetch origin main
+          git merge origin/main --no-edit || true
+
+      - name: Install GitHub CLI
+        run: sudo apt-get install gh
+
+      - name: Create pull request to main
+        id: cpr
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Sync from Shopify live"
           title: "Merge updates from Shopify live"
-          body: "Changes from shopify-live"
+          body: "Cette PR contient les changements poussés depuis Shopify (branche `shopify-live`)."
           base: main
           branch: merge-shopify-live
+
+      - name: Auto-merge the PR
+        if: steps.cpr.outputs.pull-request-number != ''
+        run: gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --merge --admin --delete-branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

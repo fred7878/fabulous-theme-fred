@@ -1,61 +1,54 @@
-name: Sync Shopify Theme Updates
+name: Auto Merge Shopify Theme Branches
 
 on:
-  push:
-    branches:
-      - shopify-live
+  schedule:
+    - cron: '0 * * * *' # toutes les heures
+  workflow_dispatch:
 
 jobs:
-  debug:
+  auto-merge:
     runs-on: ubuntu-latest
-    steps:
-      - name: Print commit message
-        run: echo "Commit message:${{ github.event.head_commit.message }}"
+    env:
+      TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+    strategy:
+      matrix:
+        include:
+          - from: prod
+            to: staging
+          - from: prod
+            to: develop
+          - from: staging
+            to: develop
 
-  sync-branches:
-    runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'Shopify')
     steps:
-      - name: Checkout shopify-live
+      - name: Checkout target branch ${{ matrix.to }}
         uses: actions/checkout@v3
         with:
-          ref: shopify-live
+          ref: ${{ matrix.to }}
           fetch-depth: 0
 
-      - name: Setup Git user
+      - name: Configure Git
         run: |
-          git config user.name "Shopify Sync Bot"
-          git config user.email "sync-bot@example.com"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
 
-      - name: Merge into develop
+      - name: Add remote and fetch source
+        run: git fetch origin ${{ matrix.from }}
+
+      - name: Attempt merge
+        id: merge
         run: |
-          git checkout develop
-          git merge -X theirs shopify-live --no-edit || true
-          git push origin develop
+          if git merge --no-commit --no-ff origin/${{ matrix.from }}; then
+            echo "Merge succeeded"
+            git commit -m "Auto-merged ${{ matrix.from }} into ${{ matrix.to }} [skip ci]"
+            git push origin HEAD:${{ matrix.to }}
+          else
+            echo "conflict" > conflict.txt
+          fi
 
-
-      - name: Create merge branch from shopify-live
+      - name: Notify Teams if merge conflict
+        if: ${{ hashFiles('conflict.txt') != '' }}
         run: |
-          git checkout -b merge-shopify-live
-          git fetch origin main
-          git merge origin/main --no-edit || true
-
-      - name: Install GitHub CLI
-        run: sudo apt-get install gh
-
-      - name: Create pull request to main
-        id: cpr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Sync from Shopify live"
-          title: "Merge updates from Shopify live"
-          body: "Cette PR contient les changements poussés depuis Shopify (branche `shopify-live`)."
-          base: main
-          branch: merge-shopify-live
-
-      - name: Auto-merge the PR
-        if: steps.cpr.outputs.pull-request-number != ''
-        run: gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --merge --admin --delete-branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          curl -H "Content-Type: application/json" \
+               -d '{"text": "⚠️ Conflit lors du merge de `${{ matrix.from }}` dans `${{ matrix.to }}` sur le repo Shopify theme."}' \
+               "$TEAMS_WEBHOOK_URL"

@@ -1,0 +1,54 @@
+name: Auto Merge Shopify Theme Branches
+
+on:
+  schedule:
+    - cron: '0 * * * *' # toutes les heures
+  workflow_dispatch:
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    env:
+      TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+    strategy:
+      matrix:
+        include:
+          - from: prod
+            to: staging
+          - from: prod
+            to: develop
+          - from: staging
+            to: develop
+
+    steps:
+      - name: Checkout target branch ${{ matrix.to }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ matrix.to }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Add remote and fetch source
+        run: git fetch origin ${{ matrix.from }}
+
+      - name: Attempt merge
+        id: merge
+        run: |
+          if git merge --no-commit --no-ff origin/${{ matrix.from }}; then
+            echo "Merge succeeded"
+            git commit -m "Auto-merged ${{ matrix.from }} into ${{ matrix.to }} [skip ci]"
+            git push origin HEAD:${{ matrix.to }}
+          else
+            echo "conflict" > conflict.txt
+          fi
+
+      - name: Notify Teams if merge conflict
+        if: ${{ hashFiles('conflict.txt') != '' }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{"text": "⚠️ Conflit lors du merge de `${{ matrix.from }}` dans `${{ matrix.to }}` sur le repo Shopify theme."}' \
+               "$TEAMS_WEBHOOK_URL"

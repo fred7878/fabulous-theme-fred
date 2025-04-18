@@ -21,6 +21,12 @@ jobs:
             to: develop
 
     steps:
+      - name: Notify Teams - Start Merge Workflow
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d '{"text": "🚀 Début du merge auto de `${{ matrix.from }}` vers `${{ matrix.to }}`."}' \
+               "$TEAMS_WEBHOOK_URL"
+             
       - name: Checkout target branch ${{ matrix.to }}
         uses: actions/checkout@v3
         with:

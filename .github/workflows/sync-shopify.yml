@@ -13,12 +13,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - from: prod
-            to: staging
-          - from: prod
+          - from: shopify-live
             to: develop
-          - from: staging
-            to: develop
+          - from: shopify-live
+            to: main
 
     steps:
       - name: Notify Teams - Start Merge Workflow

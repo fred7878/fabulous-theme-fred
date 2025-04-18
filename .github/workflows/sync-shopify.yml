@@ -1,9 +1,9 @@
 name: Auto Merge Shopify Theme Branches
 
 on:
-  schedule:
-    - cron: '0 * * * *' # toutes les heures
-  workflow_dispatch:
+  push:
+    branches:
+      - shopify-live
 
 jobs:
   auto-merge:

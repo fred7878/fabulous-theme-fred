@@ -27,18 +27,21 @@ jobs:
       - name: Check last user commit
         run: |
           echo "🧪 Vérification du dernier commit utilisateur..."
-      
-          # On récupère la branche source réelle
-          git fetch origin ${{ github.head_ref }} --depth=1
-          COMMIT_MSG=$(git log origin/${{ github.head_ref }} -1 --pretty=format:"%s")
-      
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "🔁 Pull request detected, fetching branch: ${{ github.head_ref }}"
+            git fetch origin ${{ github.head_ref }} --depth=1
+            COMMIT_MSG=$(git log origin/${{ github.head_ref }} -1 --pretty=format:"%s")
+          else
+            echo "📥 Push direct détecté, vérification sur HEAD"
+            COMMIT_MSG=$(git log -1 --pretty=format:"%s")
+          fi
           echo "🔍 Commit: $COMMIT_MSG"
-      
           if [[ ! "$COMMIT_MSG" =~ ^(feat|fix|chore|docs|style|refactor|test|perf)\([a-zA-Z0-9_]+-[0-9]+[/-].+\):\ .+ ]]; then
             echo "❌ Commit invalide : '$COMMIT_MSG'"
             echo "👉 Format attendu : feat(scope-123/titre): message"
             exit 1
           fi
+
 
 
 

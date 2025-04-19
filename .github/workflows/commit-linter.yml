@@ -15,7 +15,7 @@ jobs:
 
       - name: Check branch naming convention
         run: |
-          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
           echo "🧪 Checking branch name: $BRANCH_NAME"
 
           if [[ ! "$BRANCH_NAME" =~ ^(feature|fix|hotfix)/[a-zA-Z0-9_]+-[0-9]+[/-].+$ ]]; then

@@ -26,9 +26,16 @@ jobs:
 
       - name: Check commit messages
         run: |
-          COMMITS=$(git log ${{ github.event.before }}..${{ github.sha }} --pretty=format:"%s")
           echo "🧪 Checking commit messages..."
-
+      
+          # Si github.event.before est 0000..., on prend juste les 20 derniers commits
+          if [[ "${{ github.event.before }}" == "0000000000000000000000000000000000000000" ]]; then
+            echo "⚠️ Pas de commit précédent détecté, on utilise HEAD~20"
+            COMMITS=$(git log -n 20 --pretty=format:"%s")
+          else
+            COMMITS=$(git log ${{ github.event.before }}..${{ github.sha }} --pretty=format:"%s")
+          fi
+      
           echo "$COMMITS" | while read -r COMMIT_MSG; do
             if [[ ! "$COMMIT_MSG" =~ ^(feat|fix|chore|docs|style|refactor|test|perf)\([a-zA-Z0-9_]+-[0-9]+[/-].+\):\ .+ ]]; then
               echo "❌ Commit invalide : '$COMMIT_MSG'"
@@ -36,3 +43,4 @@ jobs:
               exit 1
             fi
           done
+

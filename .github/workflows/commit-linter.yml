@@ -1,4 +1,4 @@
-name: Check branch name and commit messages
+name: Check branch and commit nomenclature
 
 on:
   push:
@@ -18,9 +18,9 @@ jobs:
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
           echo "🧪 Checking branch name: $BRANCH_NAME"
 
-          if [[ ! "$BRANCH_NAME" =~ ^(feature|fix|hotfix)/[a-zA-Z0-9_]+-[0-9]+$ ]]; then
-            echo "❌ Le nom de la branche '$BRANCH_NAME' est invalide."
-            echo "👉 Il doit respecter : (feature|fix|hotfix)/nom-123 (ex: feature/login-42)"
+          if [[ ! "$BRANCH_NAME" =~ ^(feature|fix|hotfix)/[a-zA-Z0-9_]+-[0-9]+[/-].+$ ]]; then
+            echo "❌ Nom de branche invalide : '$BRANCH_NAME'"
+            echo "👉 Format attendu : (feature|fix|hotfix)/nom-123/titre (ex: fix/login-42/refonte)"
             exit 1
           fi
 
@@ -30,9 +30,9 @@ jobs:
           echo "🧪 Checking commit messages..."
 
           echo "$COMMITS" | while read -r COMMIT_MSG; do
-            if [[ ! "$COMMIT_MSG" =~ ^(feat|fix|chore|docs|style|refactor|test|perf)\(.*\):\ .+ ]]; then
+            if [[ ! "$COMMIT_MSG" =~ ^(feat|fix|chore|docs|style|refactor|test|perf)\([a-zA-Z0-9_]+-[0-9]+[/-].+\):\ .+ ]]; then
               echo "❌ Commit invalide : '$COMMIT_MSG'"
-              echo "👉 Format attendu : feat(scope): message"
+              echo "👉 Format attendu : feat(scope-123/titre): message"
               exit 1
             fi
           done

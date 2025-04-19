@@ -36,7 +36,7 @@ jobs:
             COMMIT_MSG=$(git log -1 --pretty=format:"%s")
           fi
           echo "🔍 Commit: $COMMIT_MSG"
-          if [[ ! "$COMMIT_MSG" =~ ^(feature|fix|hotfix)/[a-zA-Z0-9_]+-[0-9]+:\.+ ]]; then
+          if [[ ! "$COMMIT_MSG" =~ ^feature|fix|hotfix/[a-zA-Z0-9_]+-[0-9]+:\.+ ]]; then
             echo "❌ Commit invalide : '$COMMIT_MSG'"
             echo "👉 Format attendu : feat(scope-123/titre): message"
             exit 1
